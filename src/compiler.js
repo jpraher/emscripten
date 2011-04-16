@@ -6,22 +6,59 @@ try {
 } catch(e) {}
 
 // Prep - allow this to run in both SpiderMonkey and V8
+var stdin;
+if (require) {
+  // we are in Node.js
+  snarf = function(filename) { return require('fs').readFileSync(filename, 'utf8'); };
+  print = console.log;
+  stdin = process.openStdin();
+}
+
 if (!this['load']) {
   load = function(f) { eval(snarf(f)) };
 }
 if (!this['read']) {
-  read = function(f) { snarf(f) };
+  read = function(f) { return snarf(f) };
 }
 
 // Basic utilities
-
-load('utility.js');
+eval(snarf('utility.js'));
 
 // Load settings, can be overridden by commandline
+eval(snarf('settings.js'));
 
-load('settings.js');
+var i = 0;
+var settingsAsString;
+var lines = [];
 
-var settings = JSON.parse(readline());
+
+// Event 'data' on stdin: Read every input from stdin and store it in lines
+// 
+// var lines = [];
+// var line;
+// do {
+//   line = readline();
+//   if (line == null) break;
+//   lines.push(line);
+// } while(true);
+
+stdin.on('data', function(buffer) {
+	   var bufferlines = buffer.toString('utf8').split(/\n/);
+	   for (var k = 0; k < bufferlines.length; ++k) {
+	     if (i == 0) {
+	       settingsAsString = bufferlines[i];
+	     } else {
+	       lines.push(bufferlines[i]);
+	     }
+	     ++i;
+	   }
+	 });
+
+
+// Event 'end' on stdin: Do the processing.
+stdin.on('end', function() {
+
+var settings = JSON.parse(settingsAsString);
 for (setting in settings) {
   this[setting] = settings[setting];
 }
@@ -41,13 +78,13 @@ EXPORTED_FUNCTIONS = set(EXPORTED_FUNCTIONS);
 
 // Load compiler code
 
-load('framework.js');
-load('modules.js');
-load('parseTools.js');
-load('intertyper.js');
-load('analyzer.js');
-load('jsifier.js');
-load('runtime.js');
+eval(snarf('framework.js'));
+eval(snarf('modules.js'));
+eval(snarf('parseTools.js'));
+eval(snarf('intertyper.js'));
+eval(snarf('analyzer.js'));
+eval(snarf('jsifier.js'));
+eval(snarf('runtime.js'));
 
 // Load library, with preprocessing and macros
 
@@ -61,15 +98,8 @@ for (suffix in set('', '_sdl', '_gl')) {
 
 // Read llvm
 
-var lines = [];
-var line;
-do {
-  line = readline();
-  if (line == null) break;
-  lines.push(line);
-} while(true);
-
 // Do it
 
 JSify(analyzer(intertyper(lines)));
 
+});
