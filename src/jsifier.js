@@ -676,7 +676,7 @@ function JSify(data, functionsOnly, givenFunctions, givenGlobalVariables) {
       if (i === params.length-1) {
         return indexizeFunctions(finalizeLLVMParameter(params[i].value));
       }
-      return '__lastLabel__ == ' + getLabelId(params[i].label) + ' ? ' + 
+      return '__lastLabel__ == ' + getLabelId(params[i].label) + ' ? ' +
                                    indexizeFunctions(finalizeLLVMParameter(params[i].value)) + ' : (' + makeOne(i+1) + ')';
     }
     return makeOne(0);
@@ -1036,7 +1036,7 @@ function JSify(data, functionsOnly, givenFunctions, givenGlobalVariables) {
     //        postamble
     //          global_vars
 
-    var shellParts = read('shell.js').split('{{BODY}}');
+    var shellParts = read('shell.node.js').split('{{BODY}}');
     print(shellParts[0]);
       var pre = processMacros(preprocess(read('preamble.js').replace('{{RUNTIME}}', getRuntime()), CONSTANTS));
       print(pre);
